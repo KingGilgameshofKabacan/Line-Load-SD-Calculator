@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Load Calculator (NSCP 2015)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Use Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for number input arrows */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        /* Style for the main result values */
+        .main-result {
+            @apply font-bold text-3xl text-green-400;
+        }
+    </style>
+    <!-- Load Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-100 p-4 md:p-8">
+
+    <div class="max-w-2xl mx-auto">
+        
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-blue-400">Live Load Calculator</h1>
+            <p class="text-sm text-gray-400 mt-2">Based on NSCP 2015, Table 205-1: Minimum Live Loads</p>
+        </header>
+
+        <!-- Calculator Content -->
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl">
+
+            <div class="space-y-6">
+                <!-- Inputs -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label for="occupancy-type" class="block text-sm font-medium text-gray-300 mb-1">Select Building Area / Occupancy</label>
+                        <select id="occupancy-type" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                            <option value="0" data-cll="0">-- Select an Area --</option>
+                            <optgroup label="Office Areas">
+                                <option value="2.4" data-cll="9.0">Offices</option>
+                                <option value="4.8" data-cll="9.0">Lobbies & 1st Floor Corridors</option>
+                                <option value="3.8" data-cll="9.0">Corridors (Above 1st Floor)</option>
+                                <option value="4.8" data-cll="13.4">Stairs & Exit Facilities</option>
+                                <option value="2.9" data-cll="9.0">Conference / Assembly (Fixed Seats)</option>
+                                <option value="4.8" data-cll="9.0">Conference / Assembly (Movable Seats)</option>
+                                <option value="4.8" data-cll="9.0">Dining / Canteen</option>
+                            </optgroup>
+                            <optgroup label="Testing Center Areas">
+                                <option value="2.9" data-cll="9.0">Laboratories (General)</option>
+                                <option value="6.0" data-cll="9.0">Testing Lab (Light Equipment)</option>
+                                <option value="12.0" data-cll="9.0">Testing Lab (Heavy Equipment)</option>
+                            </optgroup>
+                            <optgroup label="Support & Storage Areas">
+                                <option value="6.0" data-cll="9.0">File Rooms & Light Storage</option>
+                                <option value="12.0" data-cll="9.0">Heavy Storage / Sample Curing</option>
+                                <option value="6.0" data-cll="9.0">Mechanical / Equipment Rooms</option>
+                            </optgroup>
+                            <optgroup label="Roof Areas">
+                                <option value="1.0" data-cll="0">Roof (Ordinary, Maintenance)</option>
+                                <option value="2.9" data-cll="9.0">Roof Deck (Used for Assembly)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="area" class="block text-sm font-medium text-gray-300 mb-1">Floor Area (m²)</label>
+                        <input type="number" id="area" placeholder="Enter area (optional)" step="any" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                
+                <!-- Results -->
+                <div class="pt-6 border-t border-gray-700 space-y-4">
+                    <p class="text-sm text-center text-gray-400">The structure must be designed to support the greater effect of the following loads:</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Uniform Load Result -->
+                        <div class="bg-gray-700 p-4 rounded-lg text-center">
+                            <label class="block text-sm font-medium text-gray-300">Uniform Live Load (ULL)</label>
+                            <div class="main-result mt-1">
+                                <span id="result-ull">0.00</span> kPa
+                            </div>
+                        </div>
+                        <!-- Concentrated Load Result -->
+                        <div class="bg-gray-700 p-4 rounded-lg text-center">
+                            <label class="block text-sm font-medium text-gray-300">Concentrated Live Load (CLL)</label>
+                            <div class="main-result mt-1">
+                                <span id="result-cll">0.00</span> kN
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">(Applied over a 750mm x 750mm area)</p>
+                        </div>
+                    </div>
+
+                    <!-- Total Uniform Load -->
+                    <div id="total-ull-wrapper" class="bg-gray-700 p-4 rounded-lg text-center" style="display: none;">
+                        <label class="block text-sm font-medium text-gray-300">Total Uniform Load (for selected area)</label>
+                        <div class="font-bold text-2xl text-blue-300 mt-1">
+                            <span id="result-total-ull">0.00</span> kN
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">(<span id="result-total-ull-calc">0.00 kPa × 0 m²</span>)</p>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- /Calculator Content -->
+        
+        <!-- Disclaimer -->
+        <div class="mt-6 text-center">
+            <p class="text-xs text-gray-500">
+                <strong>Disclaimer:</strong> This tool is for educational purposes. Values are based on NSCP 2015, Table 205-1. The designer must check which load condition (Uniform vs. Concentrated) produces the greater load effect. Always verify calculations with a qualified structural engineer.
+            </p>
+        </div>
+
+    </div> <!-- /Max-width container -->
+
+    <script>
+        // --- Get Elements ---
+        const selectEl = document.getElementById('occupancy-type');
+        const areaEl = document.getElementById('area');
+        
+        const ullResultEl = document.getElementById('result-ull');
+        const cllResultEl = document.getElementById('result-cll');
+        
+        const totalUllWrapperEl = document.getElementById('total-ull-wrapper');
+        const totalUllResultEl = document.getElementById('result-total-ull');
+        const totalUllCalcEl = document.getElementById('result-total-ull-calc');
+
+
+        // --- Calculation Function ---
+        function calculateLiveLoad() {
+            // Get selected option
+            const selectedOption = selectEl.options[selectEl.selectedIndex];
+            
+            // Get values from the selected option
+            const ull = parseFloat(selectedOption.value) || 0;
+            const cll = parseFloat(selectedOption.dataset.cll) || 0;
+            
+            // Get area
+            const area = parseFloat(areaEl.value) || 0;
+            
+            // Calculate total uniform load
+            const totalUll = ull * area;
+
+            // --- Update UI ---
+            ullResultEl.textContent = ull.toFixed(2);
+            cllResultEl.textContent = cll.toFixed(2);
+
+            // Show or hide the total load calculation
+            if (area > 0 && ull > 0) {
+                totalUllResultEl.textContent = totalUll.toFixed(2);
+                totalUllCalcEl.textContent = `${ull.toFixed(2)} kPa × ${area} m²`;
+                totalUllWrapperEl.style.display = 'block';
+            } else {
+                totalUllWrapperEl.style.display = 'none';
+            }
+        }
+
+        // --- Event Listeners for Calculation ---
+        selectEl.addEventListener('input', calculateLiveLoad);
+        areaEl.addEventListener('input', calculateLiveLoad);
+
+        // --- Initial Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            calculateLiveLoad(); // Run once on page load
+        });
+
+    </script>
+</body>
+</html>
